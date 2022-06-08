@@ -1,12 +1,7 @@
-const bc = new BroadcastChannel('test-channel');
+export const bc = new BroadcastChannel('test-channel');
 
 
-export const sendMessage = (tickers) => {
-    bc.postMessage(tickers);
+export const sendMessage = (message) => {
+    bc.postMessage(JSON.stringify(message));
 }
 
-export const subscribeToBroadcast = () => {
-    bc.addEventListener('message', e => {
-        return e.data
-    })
-}
