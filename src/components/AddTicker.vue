@@ -1,4 +1,10 @@
 <template>
+<!--  <modal-coins-list-->
+<!--      v-if="isModalOpen"-->
+<!--      :coin-list=this.coinList-->
+<!--      @close-modal="isModalOpen = !isModalOpen"-->
+<!--      @add-coin-from-list="quickPick"-->
+<!--  />-->
   <section>
     <div class="flex">
       <div class="max-w-xs">
@@ -30,12 +36,18 @@
         </div>
       </div>
     </div>
-    <div v-if="checkUniq" class="text-sm text-purple-800">
+    <div v-if="isUniqueTicker" class="text-sm text-purple-300">
       Такой тикер уже добавлен
     </div>
-    <div v-if="checkValid" class="text-sm text-red-800">
+    <div v-if="isValidTicker" class="text-sm text-red-200">
       Такой валюты нет
     </div>
+<!--    <div-->
+<!--        @click="isModalOpen = !isModalOpen"-->
+<!--        class="inline-block items-center py-2 px-4 my-4 h cursor-pointer border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-pink-600 hover:bg-pink-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">-->
+<!--      Список криптовалют-->
+<!--    </div>-->
+    <div></div>
     <add-button
         @click="add"
         class="my-4"/>
@@ -60,16 +72,14 @@ export default {
     }
   },
   emits: {
-    "is-coinList-loaded": state => typeof state === 'boolean',
+    "is-coinList-loaded": null,
     "add-ticker": ticker => typeof ticker === 'string' && ticker.length,
   },
   data() {
     return {
       ticker: '',
       coinList: [],
-      isUniq: false,
-      isExist: false,
-      quickPicks: ["BTC", "DOGE", "BCH", "ETH"]
+      quickPicks: ["BTC", "DOGE", "BCH", "ETH"],
     }
   },
   created() {
@@ -81,10 +91,10 @@ export default {
       this.add();
     },
     add() {
-        if (!this.checkUniq && !this.checkValid) {
-          this.$emit("add-ticker", this.ticker.toUpperCase())
-          this.ticker = "";
-        }
+      if (!this.isUniqueTicker && !this.isValidTicker && this.ticker.length) {
+        this.$emit("add-ticker", this.upperTicker)
+        this.ticker = "";
+      }
     },
     async getCoins() {
       const coinList = await getCoinList();
@@ -93,27 +103,30 @@ export default {
   },
 
   computed: {
-    checkUniq() {
-      if (this.ticker.length) {
-        return this.tickers.find((t) => t.name === this.ticker.toUpperCase())
+    isUniqueTicker() {
+      if (this.ticker.length > 1) {
+        return this.tickers.find((t) => t.name === this.upperTicker)
       }
       return false;
     },
-    checkValid() {
-      if (this.ticker.length) {
-        return !this.coinList.find((t) => t === this.ticker.toUpperCase());
+    isValidTicker() {
+      if (this.ticker.length > 1) {
+        return !this.coinList.find((t) => t === this.upperTicker);
       }
       return false;
+    },
+    upperTicker() {
+      return this.ticker.toUpperCase()
     }
   },
   watch: {
     coinList() {
-      this.$emit('is-coinList-loaded', true)
+      this.$emit('is-coinList-loaded')
     },
     ticker() {
       this.ticker.length ?
           this.quickPicks = Object.values(this.coinList)
-              .filter(el => el.includes(this.ticker.toUpperCase()))
+              .filter(el => el.includes(this.upperTicker))
               .sort()
               .slice(0, 4)
           : this.quickPicks = ["BTC", "DOGE", "BCH", "CHD"]
